@@ -32,36 +32,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         try {
-            // 1. Extract JWT token from 'Authorization' header
             String jwt = parseJwt(request);
 
-            // 2. Validate token and set authentication
+            // Using validateToken and getEmailFromToken from your JwtUtils
             if (jwt != null && jwtUtils.validateToken(jwt)) {
                 String email = jwtUtils.getEmailFromToken(jwt);
 
-                // Create Spring Security authentication token
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(email, null, Collections.emptyList());
+                        new UsernamePasswordAuthenticationToken(
+                                email,
+                                null,
+                                Collections.emptyList()
+                        );
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // 3. Store authentication in SecurityContext
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e);
+            System.out.println("Cannot set user authentication: " + e.getMessage());
         }
 
-        // Pass request to next filter in chain
         filterChain.doFilter(request, response);
     }
 
-    // Helper method to extract token from "Bearer <JWT>"
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
 
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
-            return headerAuth.substring(7); // Remove "Bearer " prefix
+            return headerAuth.substring(7);
         }
 
         return null;
